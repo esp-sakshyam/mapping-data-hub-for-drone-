@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Drone System | Sakshyam Upadhayay</title>
+    <!-- CSS Dependencies -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" />
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;800&display=swap"
+        rel="stylesheet">
+    <!-- JS Dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body class="sci-fi-theme">
+    <div class="background-grid"></div>
+    <div class="scanline"></div>
+
+    <header class="main-header">
+        <div class="header-left">
+            <div class="glitch-container">
+                <span class="tata-logo">SAKSHYAM</span>
+                <span class="sub-logo">AI DRONE MONITORING / ANALYSING SYSTEM</span>
+            </div>
+            <div class="system-time" id="system-time">00:00:00 UTC</div>
+        </div>
+
+        <div class="header-center">
+            <div class="mission-status-badge">
+                <span class="pulse-dot" id="server-status-dot"></span>
+                SYSTEM ACTIVE: BY SAKSHYAM UPADHAYAY
+            </div>
+            <div class="uptime-display"
+                style="font-size: 10px; color: var(--primary); text-align: center; margin-top: 5px;">
+                UPTIME: <span id="val-uptime">00:00:00</span>
+            </div>
+        </div>
+
+        <div class="header-right">
+            <div class="telemetry-compact">
+                <div class="stat">BAT <span id="bat-top">92%</span></div>
+                <div class="stat">SIG <span id="sig-top">85%</span></div>
+                <div class="stat">ALT <span id="alt-top">124m</span></div>
+            </div>
+        </div>
+    </header>
+
+    <div class="dashboard-grid">
+        <!-- LEFT COLUMN: ENVIRONMENT & WEATHER -->
+        <aside class="col col-left">
+            <div class="panel glass">
+                <div class="panel-header">ENVIRONMENTAL SENSORS</div>
+                <div class="panel-body">
+                    <div class="stat-row">
+                        <div class="big-stat">
+                            <label>AIR QUALITY</label>
+                            <div class="value" id="val-aqi">000</div>
+                            <div class="unit">AQI</div>
+                        </div>
+                    </div>
+                    <div class="grid-2x2">
+                        <div class="mini-card">
+                            <label>TEMP</label>
+                            <span id="val-temp">0.0</span>°C
+                        </div>
+                        <div class="mini-card">
+                            <label>HUMIDITY</label>
+                            <span id="val-hum">0</span>%
+                        </div>
+                        <div class="mini-card" style="grid-column: span 2;">
+                            <label>HARMFUL GAS ANALYSIS</label>
+                            <span id="val-gas-type" style="color: var(--secondary); font-weight: bold;">--</span>
+                            <span id="val-gas-level" style="color: var(--primary); margin-left:10px;">--</span>
+                        </div>
+                        <div class="mini-card" id="val-flame-container">
+                            <label>FLAME STATUS</label>
+                            <span id="val-flame">SAFE</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel glass">
+                <div class="panel-header">LOCAL TACTICAL INTEL</div>
+                <div class="panel-body">
+                    <div id="intel-results" class="intel-list">
+                        <div class="loading-shimmer">SCANNING AREA...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel glass">
+                <div class="panel-header">SEISMIC ACTIVITY (USGS)</div>
+                <div class="panel-body">
+                    <div id="seismic-results" class="intel-list">
+                        <div class="loading-shimmer">DETECTING TREMORS...</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel glass">
+                <div class="panel-header">DRONE ORIENTATION (IMU)</div>
+                <div id="three-container"></div>
+                <div class="imu-stats">
+                    <div class="axis">PITCH: <span id="imu-x">0.00</span></div>
+                    <div class="axis">ROLL: <span id="imu-y">0.00</span></div>
+                    <div class="axis">YAW: <span id="imu-z">0.00</span></div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- CENTER COLUMN: MAP & VISION -->
+        <section class="col col-center">
+            <div class="panel map-panel">
+                <div id="mission-map"></div>
+                <div class="map-overlay">
+                    <div class="coords" id="val-coords">27.7172° N, 85.3240° E</div>
+                    <div class="location-name" id="val-loc-name">Kathmandu Valley, Nepal</div>
+                    <button onclick="generateReport()" class="report-btn">📄 GENERATE MISSION REPORT</button>
+                </div>
+            </div>
+
+            <!-- SEARCH AERIAL RECON PANEL -->
+            <div class="panel glass aerial-recon">
+                <div class="panel-header">SAT-LINK AERIAL RECONNAISSANCE</div>
+                <div class="aerial-view-container">
+                    <!-- REPLACED STATIC IMG WITH LEAFLET MAP -->
+                    <div id="aerial-map-leaflet" style="width: 100%; height: 100%; border-radius: 4px;"></div>
+                    <div class="recon-aim"></div>
+                </div>
+            </div>
+
+            <div class="vision-grid">
+                <!-- RGB CAMERA FEED (FULL WIDTH) -->
+                <!-- RGB CAMERA FEED (FULL WIDTH) -->
+                <div class="vision-panel camera-large-panel"
+                    style="grid-column: 1 / -1; min-height: 500px; padding: 0; overflow: hidden; position: relative;">
+                    <!-- Native ESP32 Camera IFrame -->
+                    <iframe id="cam-iframe" src="" style="width: 100%; height: 100%; border: none; background: #000;"
+                        title="ESP32 Camera Native Interface"></iframe>
+
+                    <!-- Loading Fallback -->
+                    <div id="cam-loading"
+                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #000; z-index: -1;">
+                        <div style="text-align: center;">
+                            <span style="color: var(--primary); font-family: var(--font-header);">CONNECTING TO DRONE
+                                CAMERA...</span>
+                            <br><small style="color: #555;">(Ensure ESP32 is online)</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- THERMAL MAP -->
+                <div class="vision-panel thermal" style="min-height: 300px;">
+                    <div class="feed-label">THERMAL MAP (NASA LST)</div>
+                    <div id="thermal-map-leaflet" style="width: 100%; height: 100%;"></div>
+                </div>
+                <!-- WIND MAP (New) -->
+                <div class="vision-panel wind-panel" style="min-height: 300px;">
+                    <div class="feed-label">WIND DYNAMICS (LIVE)</div>
+                    <iframe width="100%" height="100%"
+                        src="https://embed.windy.com/embed2.html?lat=27.7172&lon=85.3240&detailLat=27.717&detailLon=85.324&width=1000&height=600&zoom=7&level=surface&overlay=wind&product=ecmwf&menu=&message=&marker=&calendar=now&pressure=&type=map&location=coordinates&detail=&metricWind=km%2Fh&metricTemp=%C2%B0C&radarRange=-1"
+                        frameborder="0"></iframe>
+                </div>
+            </div>
+        </section>
+
+        <!-- RIGHT COLUMN: AI & LOGS -->
+        <aside class="col col-right">
+            <div class="panel chat-panel glass">
+                <div class="panel-header">AI ANALYSING SYSTEM</div>
+                <div class="chat-wrapper">
+                    <div class="chat-messages" id="chat-messages">
+                        <div class="msg ai">Advanced Analysis Core Online. Awaiting data query.</div>
+                    </div>
+                    <div class="chat-controls">
+                        <button id="image-btn" title="Upload Image/Scan">📷</button>
+                        <input type="file" id="image-upload" accept="image/*" style="display:none">
+                        <input type="text" id="user-input" placeholder="Query AI analytical core...">
+                        <button id="send-btn">SEND</button>
+                    </div>
+                    <div id="image-preview"
+                        style="display:none; padding:10px; background:rgba(0,0,0,0.5); border:1px solid var(--primary); border-radius:4px; margin-top:5px; position:relative;">
+                        <img src="" style="max-height:60px; border-radius:4px;">
+                        <span id="remove-img"
+                            style="position:absolute; top:0; right:5px; color:var(--danger); cursor:pointer; font-weight:bold;">×</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel logs-panel glass">
+                <div class="panel-header">SYSTEM DIAGNOSTICS</div>
+                <div class="log-content" id="system-logs">
+                    <div class="log-entry">[BIOS] Monitoring system initialized...</div>
+                    <div class="log-entry">[DATA] GPS Link established...</div>
+                </div>
+                <div class="threat-stat">
+                    <span>INSECTS DETECTED:</span>
+                    <span id="pest-count" class="danger-text">0</span>
+                </div>
+            </div>
+
+            <div class="panel hardware-panel glass">
+                <div class="panel-header">CORE PERFORMANCE</div>
+                <div class="hardware-graph">
+                    <canvas id="cpu-chart"></canvas>
+                </div>
+                <div class="hardware-status">
+                    <div class="status-bit">M1: <span class="green">OK</span></div>
+                    <div class="status-bit">M2: <span class="green">OK</span></div>
+                    <div class="status-bit">M3: <span class="green">OK</span></div>
+                    <div class="status-bit">M4: <span class="green">OK</span></div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <div class="footer-data-bar">
+        <div class="panel glass footer-panel" style="margin: 0 20px 20px 20px;">
+            <div class="panel-header">ADVANCED ENVIRONMENTAL SENSOR ARRAY</div>
+            <div class="env-footer-grid">
+                <div class="env-item"><label>CO2</label><span id="val-co2">--</span></div>
+                <div class="env-item"><label>UV INDEX</label><span id="val-uv">--</span></div>
+                <div class="env-item"><label>PRESSURE</label><span id="val-press">--</span></div>
+                <div class="env-item"><label>WIND</label><span id="val-wind">--</span></div>
+                <div class="env-item"><label>WIND DIR</label><span id="val-wdir">--</span></div>
+                <div class="env-item"><label>SOIL TEMP</label><span id="val-soil">--</span></div>
+                <div class="env-item"><label>LUMINOSITY</label><span id="val-lux">--</span></div>
+                <div class="env-item"><label>VIBRATION</label><span id="val-vib">--</span></div>
+            </div>
+        </div>
+
+        <div class="panel glass statistics-overload" style="margin: 0 20px 40px 20px;">
+            <div class="panel-header">DEEP ANALYTICAL STATISTICS & SENSOR RAW DATA</div>
+            <div class="stats-scroll-container">
+                <div class="stats-grid-complex">
+                    <!-- AIR QUALITY DEEP DIVE -->
+                    <div class="stats-card-wide">
+                        <label>POLLUTION COMPONENTS (µg/m³)</label>
+                        <div class="pollutant-bar-grid">
+                            <div class="p-bar"><label>PM2.5</label>
+                                <div class="bar-outer">
+                                    <div id="bar-pm25" class="bar-inner" style="width: 40%"></div>
+                                </div><span id="txt-pm25">12.5</span>
+                            </div>
+                            <div class="p-bar"><label>PM10</label>
+                                <div class="bar-outer">
+                                    <div id="bar-pm10" class="bar-inner" style="width: 55%"></div>
+                                </div><span id="txt-pm10">34.2</span>
+                            </div>
+                            <div class="p-bar"><label>NO2</label>
+                                <div class="bar-outer">
+                                    <div id="bar-no2" class="bar-inner" style="width: 20%"></div>
+                                </div><span id="txt-no2">8.1</span>
+                            </div>
+                            <div class="p-bar"><label>O3</label>
+                                <div class="bar-outer">
+                                    <div id="bar-o3" class="bar-inner" style="width: 30%"></div>
+                                </div><span id="txt-o3">45.6</span>
+                            </div>
+                            <div class="p-bar"><label>CO</label>
+                                <div class="bar-outer">
+                                    <div id="bar-co" class="bar-inner" style="width: 15%"></div>
+                                </div><span id="txt-co">0.4</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- POLLEN & SOLAR -->
+                    <div class="stats-card">
+                        <label>BIO-METRICS (POLLEN)</label>
+                        <div class="pollen-indicator">
+                            <div class="bio-item"><span>TREE:</span> <span id="val-pollen-tree" class="green">LOW</span>
+                            </div>
+                            <div class="bio-item"><span>GRASS:</span> <span id="val-pollen-grass"
+                                    class="green">NONE</span></div>
+                            <div class="bio-item"><span>WEED:</span> <span id="val-pollen-weed" class="green">LOW</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stats-card">
+                        <label>SOLAR POTENTIAL</label>
+                        <div class="solar-stats">
+                            <div class="solar-row"><span>ANNUAL KW:</span> <span id="val-solar-kw">12.4</span></div>
+                            <div class="solar-row"><span>SUN HOURS:</span> <span id="val-solar-hours">1450</span></div>
+                        </div>
+                    </div>
+
+                    <!-- RAW SENSOR PACKETS -->
+                    <div class="stats-card-wide raw-data-feed">
+                        <label>RAW SENSOR TELEMETRY PACKETS (UDP/JSON)</label>
+                        <div id="raw-sensor-log" class="monospaced-log">
+                            [PACKET] 0x4F2A - CRC OK - 21.8C, 60%, 1013hPa
+                            [PACKET] 0x4F2B - CRC OK - 21.8C, 60%, 1013hPa
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECRET ADMIN MODAL -->
+    <div class="modal" id="admin-modal">
+        <div class="modal-content">
+            <h2 style="font-family: var(--font-header); color: var(--primary); margin-bottom: 20px;">SYSTEM OVERRIDE
+            </h2>
+            <div class="admin-grid" id="admin-inputs"></div>
+            <div class="modal-btns" style="display: flex; gap: 15px; margin-top: 20px;">
+                <button onclick="saveAdminSettings()" class="btn-save"
+                    style="flex: 1; padding: 15px; background: var(--primary); color: #000; border: none; font-weight: bold; cursor: pointer; border-radius: 5px;">DEPLOY
+                    CHANGES</button>
+                <button onclick="closeAdmin()" class="btn-cancel"
+                    style="flex: 1; padding: 15px; background: transparent; color: var(--danger); border: 1px solid var(--danger); cursor: pointer; border-radius: 5px;">CLOSE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- REPORT MODAL -->
+    <!-- REPORT MODAL -->
+    <div class="modal" id="report-modal">
+        <div class="modal-content report-paper">
+            <div class="report-watermark">CONFIDENTIAL</div>
+
+            <div class="report-header">
+                <div>
+                    <div class="report-logo-text">NEPAL AGRI-DRONE INITIATIVE</div>
+                    <div class="report-sub-logo">ADVANCED AERIAL TELEMETRY CORPS</div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-weight: bold; font-family: 'Helvetica Neue', Arial;">OFFICIAL MISSION REPORT</div>
+                    <div style="font-size: 10px; font-family: Consolas;">CONFIDENTIALITY LEVEL: 3</div>
+                </div>
+            </div>
+
+            <div class="report-meta-grid">
+                <div><strong>MISSION ID:</strong> <span id="report-ref-id">--</span></div>
+                <div><strong>DATE/TIME:</strong> <span id="report-date">--</span></div>
+                <div><strong>OPERATIONAL ZONE:</strong> <span id="report-loc">--</span></div>
+                <div><strong>DRONE UNIT:</strong> ESP32-S3-V2 (OPTICAL/THERMAL)</div>
+                <div><strong>PILOT IN COMMAND:</strong> AUTO-NAVIGATION SYS</div>
+                <div><strong>GENERATION TIMESTAMP:</strong> <span id="report-gen-time">--</span></div>
+            </div>
+
+            <div id="report-body" class="report-body">
+                <div class="loading-shimmer" style="text-align: center; padding: 40px; color: #555;">
+                    <div style="font-family: inherit; font-size: 14pt; margin-bottom: 10px;">GENERATING SECURE
+                        DOCUMENT...</div>
+                    <small>Encrypting Telemetry Stream...</small>
+                </div>
+            </div>
+
+            <div class="report-footer-sig">
+                <div class="sig-block">
+                    <div class="sig-line"></div>
+                    <div style="font-size: 10px;">CHIEF AGRONOMIST (AI)</div>
+                </div>
+                <div class="sig-block">
+                    <div class="sig-line"></div>
+                    <div style="font-size: 10px;">MISSION COMMANDER</div>
+                </div>
+            </div>
+
+            <div class="report-footer report-footer-controls">
+                <button onclick="closeReport()" class="btn-cancel">CLOSE</button>
+                <button onclick="window.print()" class="btn-save">🖨️ PRINT OFFICIAL COPY</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/dashboard.js"></script>
+    <script src="assets/js/chatbot.js"></script>
+</body>
+
+</html>

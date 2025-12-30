@@ -1,0 +1,63 @@
+{
+    "telemetry": {
+        "air_quality": 45,
+        "harmful_gas": {
+            "type": "Methane (CH4)",
+            "level": "0.02%",
+            "status": "Safe"
+        },
+        "temperature": 29.8,
+        "humidity": 60,
+        "gyro": {
+            "x": 0.02,
+            "y": -0.01,
+            "z": 0.98
+        },
+        "gps": {
+            "lat": 26.9167,
+            "lng": 85.0833,
+            "location": "BARA FISH FARMS"
+        },
+        "gsm": {
+            "status": "Connected",
+            "signal": 85
+        },
+        "sim": "Active",
+        "flame": "Normal",
+        "system": {
+            "battery": 92,
+            "status": "Armed",
+            "uptime": "01:24:32"
+        },
+        "ai_detection": {
+            "insects": 2,
+            "threats": "None",
+            "hazard_level": "Low"
+        },
+        "advanced_env": {
+            "co2": "415 ppm",
+            "uv_index": "3.2 Low",
+            "pressure": "1013 hPa",
+            "wind_speed": "4.2 m/s",
+            "wind_dir": "NE",
+            "soil_temp": "21.4\u00c2\u00b0C",
+            "light_lvl": "12400 lux",
+            "vibration": "0.01g",
+            "pollen": {
+                "tree": "Low",
+                "grass": "None",
+                "weed": "Low"
+            },
+            "solar": {
+                "potential_kw": "12.4",
+                "sunlight_hours": "1450"
+            }
+        }
+    },
+    "config": {
+        "gemini_api_key": "AIzaSyAevs5aOUXlXYnXasO2B6W_yqL02L-hyC8",
+        "google_api_key": "u3plqW3XGjUc6rE2egHEt5UdFsE=",
+        "serp_api_key": "",
+        "demo_mode": true
+    }
+}
